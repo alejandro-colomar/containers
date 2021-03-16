@@ -16,7 +16,7 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Deploy docker swarm stack from <etc/docker/swarm/*.yaml>,
+	Deploy docker swarm stack from <etc/swarm/manifests/*.yaml>,
 	using configs and secrets from <run/{configs,secrets}/PROJECT/>.
 
 	Root permissions are required to copy files to /run.
@@ -31,7 +31,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		The directory <etc/docker/swarm/> does not exist.
+		The directory <etc/swarm/manifests/> does not exist.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -62,14 +62,14 @@ if [ $# -ne 1 ]; then
 fi;
 s="$1";
 
-! [ -d etc/docker/swarm/ ] \
+! [ -d etc/swarm/manifests/ ] \
 	&&exit ${EX_NOINPUT};
 
 _d="$(dirname "${BASH_SOURCE[0]}")";
 ${_d}/../common/cp_configs ${v} ||:;
 ${_d}/../common/cp_secrets ${v} ||:;
 
-docker stack deploy -c "etc/docker/swarm/compose.yaml" "${s}";
+docker stack deploy -c etc/swarm/manifests/*.yaml "${s}";
 
 ${_d}/../common/rm_secrets ${v} ||:;
 ${_d}/../common/rm_configs ${v} ||:;

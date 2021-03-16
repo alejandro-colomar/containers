@@ -16,7 +16,7 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Deploy openshift stack from <etc/docker/openshift/*.yaml>,
+	Deploy openshift stack from <etc/openshift/manifests/*.yaml>,
 	using configs and secrets from <run/{configs,secrets}/PROJDIR/>.
 
 	Root permissions are required to copy files to /run.
@@ -31,7 +31,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		The directory <etc/docker/openshift/> does not exist.
+		The directory <etc/openshift/manifests/> does not exist.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -62,7 +62,7 @@ if [ $# -ne 1 ]; then
 fi;
 p="$1";
 
-! [ -d "etc/docker/openshift/" ] \
+! [ -d "etc/openshift/manifests/" ] \
 	&&exit ${EX_NOINPUT};
 
 oc new-project "${p}";
@@ -71,7 +71,7 @@ _d="$(dirname "${BASH_SOURCE[0]}")";
 ${_d}/../openshift/alx_oc_create_configmaps	${v} ||:;
 ${_d}/../openshift/alx_oc_create_secrets	${v} ||:;
 
-find -L "etc/docker/openshift/" -type f \
+find -L "etc/openshift/manifests/" -type f \
 |sort -V \
 |while read -r f; do
 	oc apply -f "${f}" -n "${p}";

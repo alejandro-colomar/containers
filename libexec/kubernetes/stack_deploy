@@ -16,7 +16,7 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Deploy kubernetes stack from <etc/docker/kubernetes/*.yaml>,
+	Deploy kubernetes stack from <etc/kubernetes/manifests/*.yaml>,
 	using configs and secrets from <run/{configs,secrets}/PROJECT/>.
 
 	Root permissions are required to copy files to /run.
@@ -34,7 +34,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		The directory <etc/docker/kubernetes/> does not exist.
+		The directory <etc/kubernetes/manifests/> does not exist.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -67,7 +67,7 @@ if [ $# -ne 1 ]; then
 fi;
 n="$1";
 
-! [ -d etc/docker/kubernetes/ ] \
+! [ -d etc/kubernetes/manifests/ ] \
 	&&exit ${EX_NOINPUT};
 
 "${k:-kubectl}" create namespace "${n}";
@@ -76,7 +76,7 @@ _d="$(dirname "${BASH_SOURCE[0]}")";
 ${_d}/../kubernetes/create_configmaps	${v} -n "${n}" ${k:+-k} ${k} ||:;
 ${_d}/../kubernetes/create_secrets	${v} -n "${n}" ${k:+-k} ${k} ||:;
 
-find -L "etc/docker/kubernetes/" -type f \
+find -L "etc/kubernetes/manifests/" -type f \
 |sort -V \
 |while read -r f; do
 	"${k:-kubectl}" apply -f "${f}" -n "${n}";
