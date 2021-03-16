@@ -10,10 +10,10 @@ sbindir		= $(exec_prefix)/sbin
 libexecdir	= $(exec_prefix)/libexec
 libexecdir_	= $(libexec)/alx/containers
 
-all: | containers docker kubernetes oc
+all: | common swarm kubernetes openshift
 
-.PHONY: containers
-containers:
+.PHONY: common
+common:
 	@cd $(CURDIR)/bin && \
 	find alx_stack_* -type f 2>/dev/null \
 	|while read -r f; do \
@@ -27,34 +27,34 @@ containers:
 		install -DT "$$f" "$(DESTDIR)$(sbindir)/$$f"; \
 	done;
 	@cd $(CURDIR)/libexec && \
-	find alx_{containers,stack}_* -type f \
+	find containers/$@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
 	done;
 
-.PHONY: docker
-docker: | containers
+.PHONY: swarm
+swarm: | common
 	@cd $(CURDIR)/libexec && \
-	find alx_swarm_* -type f \
+	find containers/$@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
 	done;
 
 .PHONY: kubernetes
-kubernetes: | containers
+kubernetes: | common
 	@cd $(CURDIR)/libexec && \
-	find alx_kube_* -type f \
+	find containers/$@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
 	done;
 
-.PHONY: oc
-oc: | containers kubernetes
+.PHONY: openshift
+openshift: | common kubernetes
 	@cd $(CURDIR)/libexec && \
-	find alx_oc_* -type f \
+	find containers/$@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
