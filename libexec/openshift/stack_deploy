@@ -66,8 +66,10 @@ p="$1";
 	&&exit ${EX_NOINPUT};
 
 oc new-project "${p}";
-alx_oc_create_configmaps	${v} ||:;
-alx_oc_create_secrets		${v} ||:;
+
+_d="$(dirname "${BASH_SOURCE[0]}")";
+${_d}/../openshift/alx_oc_create_configmaps	${v} ||:;
+${_d}/../openshift/alx_oc_create_secrets	${v} ||:;
 
 find -L "etc/docker/openshift/" -type f \
 |sort -V \

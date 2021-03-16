@@ -5,7 +5,7 @@ set -Eeuo pipefail;
 #	SPDX-License-Identifier:  GPL-2.0-only
 ########################################################################
 
-synopsis="${BASH_SOURCE[0]} [OPTION]...";
+synopsis="${BASH_SOURCE[0]} [OPTION]... NAMESPACE";
 
 usage="\
 Usage:  ${synopsis}
@@ -16,15 +16,16 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Create configmaps from <run/configs/PROJECT/*>.
+	Deploy kubernetes stack from <etc/docker/kubernetes/*.yaml>,
+	using configs and secrets from <run/{configs,secrets}/PROJECT/>.
 
 	Root permissions are required to copy files to /run.
 
 OPTIONS
 	-h	Print this help and exit.
 
-	-p=PROJECT
-		Use a specific project.  [ignored]
+	-k=KUBECTL
+		Use a different kubectl (default is 'kubectl').
 
 	-v	Verbose output.
 
@@ -33,7 +34,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		No configs were found.
+		The directory <etc/docker/kubernetes/> does not exist.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -41,14 +42,15 @@ ERRORS
 
 EX_OK=0;
 EX_USAGE=64;
+EX_NOINPUT=66;
 
 v='';
-while getopts 'hp:v' opt; do
+while getopts 'hk:v' opt; do
 	case ${opt} in
 	h)	echo "${help}";
 		exit ${EX_OK};
 		;;
-	p)	p="${OPTARG}";
+	k)	k="${OPTARG}";
 		;;
 	v)	v='-v';
 		;;
@@ -59,11 +61,25 @@ while getopts 'hp:v' opt; do
 done;
 shift $((${OPTIND} - 1));
 
-if [ $# -ne 0 ]; then
+if [ $# -ne 1 ]; then
 	>&2 echo "${usage}";
 	exit ${EX_USAGE};
 fi;
+n="$1";
 
-alx_kube_create_configmaps -k 'oc';
+! [ -d etc/docker/kubernetes/ ] \
+	&&exit ${EX_NOINPUT};
+
+"${k:-kubectl}" create namespace "${n}";
+
+_d="$(dirname "${BASH_SOURCE[0]}")";
+${_d}/../kubernetes/create_configmaps	${v} -n "${n}" ${k:+-k} ${k} ||:;
+${_d}/../kubernetes/create_secrets	${v} -n "${n}" ${k:+-k} ${k} ||:;
+
+find -L "etc/docker/kubernetes/" -type f \
+|sort -V \
+|while read -r f; do
+	"${k:-kubectl}" apply -f "${f}" -n "${n}";
+done;
 
 exit ${EX_OK};

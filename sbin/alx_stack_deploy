@@ -71,15 +71,16 @@ if [ $# -ne 1 ]; then
 fi;
 s="$1";
 
+_d="$(dirname "${BASH_SOURCE[0]}")";
 case "${orchestrator}" in
 "kubernetes")
-	alx_kube_deploy ${v} "${s}";
+	${_d}/../libexec/alx/containers/kubernetes/stack_deploy ${v} "${s}";
 	;;
 "openshift")
-	alx_oc_deploy ${v} "${s}";
+	${_d}/../libexec/alx/containers/openshift/stack_deploy ${v} "${s}";
 	;;
 "swarm")
-	alx_swarm_deploy ${v} "${s}";
+	${_d}/../libexec/alx/containers/swarm/stack_deploy ${v} "${s}";
 	;;
 esac;
 

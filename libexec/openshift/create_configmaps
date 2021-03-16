@@ -16,18 +16,15 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Create secrets from <run/secrets/PROJECT/*>.
+	Create configmaps from <run/configs/PROJECT/*>.
 
 	Root permissions are required to copy files to /run.
 
 OPTIONS
 	-h	Print this help and exit.
 
-	-k=KUBECTL
-		Use a different kubectl (default is 'kubectl').
-
-	-n=NAMESAPCE
-		Use a specific namespace.
+	-p=PROJECT
+		Use a specific project.  [ignored]
 
 	-v	Verbose output.
 
@@ -36,7 +33,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		No secrets were found.
+		No configs were found.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -46,14 +43,12 @@ EX_OK=0;
 EX_USAGE=64;
 
 v='';
-while getopts 'hk:n:v' opt; do
+while getopts 'hp:v' opt; do
 	case ${opt} in
 	h)	echo "${help}";
 		exit ${EX_OK};
 		;;
-	k)	k="${OPTARG}";
-		;;
-	n)	n="${OPTARG}";
+	p)	p="${OPTARG}";
 		;;
 	v)	v='-v';
 		;;
@@ -69,20 +64,7 @@ if [ $# -ne 0 ]; then
 	exit ${EX_USAGE};
 fi;
 
-alx_containers_cp_secrets ${v};
-
-project="$(find run/secrets/* -maxdepth 0 | xargs basename)";
-
-find -L "/run/secrets/${project}/" -type f \
-|while read -r f; do
-	echo "${f}" \
-	|sed "s%^/run/secrets/${project}/%%" \
-	|tr '/._' '[-*]' \
-	|sed "s/$/-${project}-secret/" \
-	|xargs -I 'sec' \
-	 "${k:-kubectl}" create secret generic 'sec' --from-file "${f}" ${n:+-n} ${n};
-done;
-
-alx_containers_rm_secrets;
+_d="$(dirname "${BASH_SOURCE[0]}")";
+${_d}/../kubernetes/create_configmaps -k 'oc';
 
 exit ${EX_OK};

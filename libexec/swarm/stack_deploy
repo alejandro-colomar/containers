@@ -5,7 +5,7 @@ set -Eeuo pipefail;
 #	SPDX-License-Identifier:  GPL-2.0-only
 ########################################################################
 
-synopsis="${BASH_SOURCE[0]} [OPTION]... NAMESPACE";
+synopsis="${BASH_SOURCE[0]} [OPTION]... STACKNAME";
 
 usage="\
 Usage:  ${synopsis}
@@ -16,16 +16,13 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Deploy kubernetes stack from <etc/docker/kubernetes/*.yaml>,
+	Deploy docker swarm stack from <etc/docker/swarm/*.yaml>,
 	using configs and secrets from <run/{configs,secrets}/PROJECT/>.
 
 	Root permissions are required to copy files to /run.
 
 OPTIONS
 	-h	Print this help and exit.
-
-	-k=KUBECTL
-		Use a different kubectl (default is 'kubectl').
 
 	-v	Verbose output.
 
@@ -34,7 +31,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		The directory <etc/docker/kubernetes/> does not exist.
+		The directory <etc/docker/swarm/> does not exist.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -50,8 +47,6 @@ while getopts 'hk:v' opt; do
 	h)	echo "${help}";
 		exit ${EX_OK};
 		;;
-	k)	k="${OPTARG}";
-		;;
 	v)	v='-v';
 		;;
 	?)	>&2 echo "${usage}";
@@ -65,19 +60,18 @@ if [ $# -ne 1 ]; then
 	>&2 echo "${usage}";
 	exit ${EX_USAGE};
 fi;
-n="$1";
+s="$1";
 
-! [ -d etc/docker/kubernetes/ ] \
+! [ -d etc/docker/swarm/ ] \
 	&&exit ${EX_NOINPUT};
 
-"${k:-kubectl}" create namespace "${n}";
-alx_kube_create_configmaps	${v} -n "${n}" ${k:+-k} ${k} ||:;
-alx_kube_create_secrets		${v} -n "${n}" ${k:+-k} ${k} ||:;
+_d="$(dirname "${BASH_SOURCE[0]}")";
+${_d}/../common/cp_configs ${v} ||:;
+${_d}/../common/cp_secrets ${v} ||:;
 
-find -L "etc/docker/kubernetes/" -type f \
-|sort -V \
-|while read -r f; do
-	"${k:-kubectl}" apply -f "${f}" -n "${n}";
-done;
+docker stack deploy -c "etc/docker/swarm/compose.yaml" "${s}";
+
+${_d}/../common/rm_secrets ${v} ||:;
+${_d}/../common/rm_configs ${v} ||:;
 
 exit ${EX_OK};

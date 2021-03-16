@@ -5,7 +5,7 @@ set -Eeuo pipefail;
 #	SPDX-License-Identifier:  GPL-2.0-only
 ########################################################################
 
-synopsis="${BASH_SOURCE[0]} [OPTION]... STACKNAME";
+synopsis="${BASH_SOURCE[0]} [OPTION]...";
 
 usage="\
 Usage:  ${synopsis}
@@ -16,13 +16,18 @@ SYNOPSIS
 	${synopsis}
 
 DESCRIPTION
-	Deploy docker swarm stack from <etc/docker/swarm/*.yaml>,
-	using configs and secrets from <run/{configs,secrets}/PROJECT/>.
+	Create configmaps from <run/configs/PROJECT/*>.
 
 	Root permissions are required to copy files to /run.
 
 OPTIONS
 	-h	Print this help and exit.
+
+	-k=KUBECTL
+		Use a different kubectl (default is 'kubectl').
+
+	-n=NAMESAPCE
+		Use a specific namespace.
 
 	-v	Verbose output.
 
@@ -31,7 +36,7 @@ ERRORS
 		Invalid or missing arguments or options.
 
 	EX_NOINPUT
-		The directory <etc/docker/swarm/> does not exist.
+		No configs were found.
 
 	EX_NOPERM
 		Not enough permissions.
@@ -39,13 +44,16 @@ ERRORS
 
 EX_OK=0;
 EX_USAGE=64;
-EX_NOINPUT=66;
 
 v='';
-while getopts 'hk:v' opt; do
+while getopts 'hk:n:v' opt; do
 	case ${opt} in
 	h)	echo "${help}";
 		exit ${EX_OK};
+		;;
+	k)	k="${OPTARG}";
+		;;
+	n)	n="${OPTARG}";
 		;;
 	v)	v='-v';
 		;;
@@ -56,21 +64,26 @@ while getopts 'hk:v' opt; do
 done;
 shift $((${OPTIND} - 1));
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 0 ]; then
 	>&2 echo "${usage}";
 	exit ${EX_USAGE};
 fi;
-s="$1";
 
-! [ -d etc/docker/swarm/ ] \
-	&&exit ${EX_NOINPUT};
+_d="$(dirname "${BASH_SOURCE[0]}")";
+${_d}/../common/cp_configs ${v};
 
-alx_containers_cp_configs ${v} ||:;
-alx_containers_cp_secrets ${v} ||:;
+project="$(find run/configs/* -maxdepth 0 | xargs basename)";
 
-docker stack deploy -c "etc/docker/swarm/compose.yaml" "${s}";
+find -L "/run/configs/${project}/" -type f \
+|while read -r f; do
+	echo "${f}" \
+	|sed "s%^/run/configs/${project}/%%" \
+	|tr '/._' '[-*]' \
+	|sed "s/$/-${project}-cm/" \
+	|xargs -I 'cm' \
+	 "${k:-kubectl}" create configmap 'cm' --from-file "${f}" ${n:+-n} ${n:-};
+done;
 
-alx_containers_rm_secrets ${v} ||:;
-alx_containers_rm_configs ${v} ||:;
+${_d}/../common/rm_configs ${v};
 
 exit ${EX_OK};

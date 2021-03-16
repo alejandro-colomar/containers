@@ -57,15 +57,16 @@ if [ $# -ne 1 ]; then
 fi;
 s="$1";
 
+_d="$(dirname "${BASH_SOURCE[0]}")";
 case "${orchestrator}" in
 "kubernetes")
-	alx_kube_delete "${s}";
+	${_d}/../libexec/alx/containers/kubernetes/stack_delete "${s}";
 	;;
 "openshift")
-	alx_oc_delete "${s}";
+	${_d}/../libexec/alx/containers/openshift/stack_delete "${s}";
 	;;
 "swarm")
-	alx_swarm_delete "${s}";
+	${_d}/../libexec/alx/containers/swarm/stack_delete "${s}";
 	;;
 esac;
 
