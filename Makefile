@@ -8,7 +8,7 @@ exec_prefix = $(prefix)
 bindir		= $(exec_prefix)/bin
 sbindir		= $(exec_prefix)/sbin
 libexecdir	= $(exec_prefix)/libexec
-libexecdir_	= $(libexec)/alx/containers
+libexecdir_	= $(libexecdir)/alx/containers
 
 all: | common swarm kubernetes openshift
 
@@ -27,7 +27,7 @@ common:
 		install -DT "$$f" "$(DESTDIR)$(sbindir)/$$f"; \
 	done;
 	@cd $(CURDIR)/libexec && \
-	find containers/$@/ -type f \
+	find $@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
@@ -36,7 +36,7 @@ common:
 .PHONY: swarm
 swarm: | common
 	@cd $(CURDIR)/libexec && \
-	find containers/$@/ -type f \
+	find $@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
@@ -45,7 +45,7 @@ swarm: | common
 .PHONY: kubernetes
 kubernetes: | common
 	@cd $(CURDIR)/libexec && \
-	find containers/$@/ -type f \
+	find $@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
@@ -54,7 +54,7 @@ kubernetes: | common
 .PHONY: openshift
 openshift: | common kubernetes
 	@cd $(CURDIR)/libexec && \
-	find containers/$@/ -type f \
+	find $@/ -type f \
 	|while read -r f; do \
 		echo "	INSTALL	$(DESTDIR)$(libexecdir_)/$$f"; \
 		install -DT "$$f" "$(DESTDIR)$(libexecdir_)/$$f"; \
