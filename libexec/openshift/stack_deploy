@@ -68,8 +68,8 @@ p="$1";
 oc new-project "${p}";
 
 _d="$(dirname "${BASH_SOURCE[0]}")";
-${_d}/../openshift/alx_oc_create_configmaps	${v} ||:;
-${_d}/../openshift/alx_oc_create_secrets	${v} ||:;
+${_d}/../openshift/create_configmaps	${v} ||:;
+${_d}/../openshift/create_secrets	${v} ||:;
 
 find -L "etc/openshift/manifests/" -type f \
 |sort -V \
