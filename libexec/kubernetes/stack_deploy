@@ -76,10 +76,6 @@ _d="$(dirname "${BASH_SOURCE[0]}")";
 ${_d}/../kubernetes/create_configmaps	${v} -n "${n}" ${k:+-k} ${k} ||:;
 ${_d}/../kubernetes/create_secrets	${v} -n "${n}" ${k:+-k} ${k} ||:;
 
-find -L "etc/kubernetes/manifests/" -type f \
-|sort -V \
-|while read -r f; do
-	"${k:-kubectl}" apply -f "${f}" -n "${n}";
-done;
+"${k:-kubectl}" apply -Rf etc/kubernetes/manifests/ -n "${n}";
 
 exit ${EX_OK};
