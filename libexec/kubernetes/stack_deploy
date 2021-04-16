@@ -73,8 +73,8 @@ n="$1";
 "${k:-kubectl}" create namespace "${n}";
 
 _d="$(dirname "${BASH_SOURCE[0]}")";
-${_d}/../kubernetes/create_configmaps	${v} -n "${n}" ${k:+-k} ${k} ||:;
-${_d}/../kubernetes/create_secrets	${v} -n "${n}" ${k:+-k} ${k} ||:;
+${_d}/../kubernetes/create_configmaps	${v} -n "${n}" ${k:+-k} ${k:-} ||:;
+${_d}/../kubernetes/create_secrets	${v} -n "${n}" ${k:+-k} ${k:-} ||:;
 
 "${k:-kubectl}" apply -Rf etc/kubernetes/manifests/ -n "${n}";
 
